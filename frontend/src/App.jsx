@@ -3,8 +3,12 @@ import UploadComponent from './components/UploadComponent';
 import DocumentList from './components/DocumentList';
 import { listDocuments } from './services/documentService';
 
+const PAGE_SIZE = 25;
+
 export default function App() {
   const [documents, setDocuments] = useState([]);
+  const [totalDocuments, setTotalDocuments] = useState(0);
+  const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -12,13 +16,15 @@ export default function App() {
     setIsLoading(true);
     setErrorMessage('');
     try {
-      setDocuments(await listDocuments());
+      const result = await listDocuments({ limit: PAGE_SIZE, offset: page * PAGE_SIZE });
+      setDocuments(result.documents);
+      setTotalDocuments(result.total);
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     loadDocuments();
@@ -35,7 +41,15 @@ export default function App() {
 
       <section>
         <h2>Documentos</h2>
-        <DocumentList documents={documents} isLoading={isLoading} errorMessage={errorMessage} />
+        <DocumentList
+          documents={documents}
+          isLoading={isLoading}
+          errorMessage={errorMessage}
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={totalDocuments}
+          onPageChange={setPage}
+        />
       </section>
     </main>
   );

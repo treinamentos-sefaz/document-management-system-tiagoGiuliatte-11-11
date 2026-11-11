@@ -11,18 +11,19 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function DocumentList({ documents, isLoading, errorMessage }) {
+export default function DocumentList({ documents, isLoading, errorMessage, page, pageSize, total, onPageChange }) {
   if (isLoading) {
     return <p>Carregando documentos...</p>;
   }
   if (errorMessage) {
     return <p role="alert" style={{ color: 'crimson' }}>{errorMessage}</p>;
   }
-  if (documents.length === 0) {
+  if (documents.length === 0 && page === 0) {
     return <p>Nenhum documento enviado ainda.</p>;
   }
 
   return (
+    <>
     <table>
       <thead>
         <tr>
@@ -47,5 +48,19 @@ export default function DocumentList({ documents, isLoading, errorMessage }) {
         ))}
       </tbody>
     </table>
+    <nav aria-label="Paginação de documentos">
+      <button type="button" onClick={() => onPageChange(page - 1)} disabled={page === 0 || isLoading}>
+        Anterior
+      </button>
+      <span> Página {page + 1} de {Math.max(1, Math.ceil(total / pageSize))} </span>
+      <button
+        type="button"
+        onClick={() => onPageChange(page + 1)}
+        disabled={(page + 1) * pageSize >= total || isLoading}
+      >
+        Próxima
+      </button>
+    </nav>
+    </>
   );
 }
