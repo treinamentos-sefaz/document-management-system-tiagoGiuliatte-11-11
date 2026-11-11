@@ -132,6 +132,26 @@ test('GET /documents/:id/download devolve o conteúdo com o nome original', asyn
   assert.match(response.headers.get('content-type'), /text\/plain/);
 });
 
+test('upload, listagem e download preservam um documento binário', async () => {
+  const content = Buffer.from([0x00, 0x7f, 0x80, 0xff]);
+  const uploadResponse = await uploadDocument(content, 'arquivo.bin', { 'X-Owner-Id': 'ana' });
+
+  assert.strictEqual(uploadResponse.status, 201);
+  const uploaded = await uploadResponse.json();
+  assert.strictEqual(uploaded.size, content.length);
+  assert.strictEqual(uploaded.owner, 'ana');
+
+  const listResponse = await fetch(`${baseUrl}/documents`);
+  assert.strictEqual(listResponse.status, 200);
+  const documents = await listResponse.json();
+  assert.deepStrictEqual(documents.find((document) => document.id === uploaded.id), uploaded);
+
+  const downloadResponse = await fetch(`${baseUrl}/documents/${uploaded.id}/download`);
+  assert.strictEqual(downloadResponse.status, 200);
+  assert.match(downloadResponse.headers.get('content-disposition'), /filename="arquivo\.bin"/);
+  assert.deepStrictEqual(Buffer.from(await downloadResponse.arrayBuffer()), content);
+});
+
 test('GET /documents/:id/download retorna 404 para identificador inexistente', async () => {
   const response = await fetch(`${baseUrl}/documents/nao-existe/download`);
 
