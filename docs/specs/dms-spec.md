@@ -1,6 +1,6 @@
 # Especificação - Document Management System
 
-> Especificação proposta para orientar a implementação do DMS. Os fluxos de documentos descritos aqui são requisitos planejados; atualmente, o backend implementa somente `GET /health`.
+> Especificação proposta para orientar a implementação do DMS. O backend implementa os endpoints de documentos descritos na seção 6; as decisões tomadas durante a implementação estão listadas na seção 7 e na seção 8 do estado atual.
 
 ## 1. Objetivo
 
@@ -104,7 +104,8 @@ Os códigos HTTP e o formato comum das respostas de erro não estão definidos n
 
 ### Estado atual
 
-- `GET /health` é o único endpoint existente no backend. As três rotas de documentos nesta especificação são planejadas.
+- O backend implementa `GET /health`, `POST /upload`, `GET /documents` e `GET /documents/:id/download`, nas camadas `routes -> controllers -> services -> repositories`.
+- Decisões tomadas na implementação, pendentes de confirmação na especificação: campo multipart `file`; sucesso `201` no upload e `200` nas demais rotas; erros no formato `{ "error": "..." }`; limite de tamanho configurável por `MAX_UPLOAD_BYTES` (padrão 10 MB); diretório configurável por `STORAGE_DIR` (padrão `backend/storage`); `owner` lido do cabeçalho `X-Owner-Id` (padrão `anonymous`), sem autenticação nem filtro por proprietário.
 - A interface atual ainda não implementa os fluxos de envio, listagem ou download.
 
 ## 8. Plano de execução

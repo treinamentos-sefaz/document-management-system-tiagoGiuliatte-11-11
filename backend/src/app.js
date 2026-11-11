@@ -11,16 +11,31 @@
 // usando multer com diskStorage. Não utilize provedores externos.
 
 const express = require('express');
+const documentRouter = require('./routes/documentRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Endpoint de verificação de saúde. As demais rotas (/upload, /documents,
-// /documents/:id/download) serão implementadas durante o Passo 2.
+// Endpoint de verificação de saúde.
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+app.use(documentRouter);
+
+// Tratamento centralizado de erros. Erros 5xx não expõem detalhes ao cliente.
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+  const status = err.status || 500;
+  if (status >= 500) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
+  res.status(status).json({ error: err.message });
 });
 
 if (require.main === module) {
