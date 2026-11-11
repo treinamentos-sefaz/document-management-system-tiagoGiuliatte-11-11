@@ -7,8 +7,10 @@ function saveBlobAsFile(blob, fileName) {
   const link = document.createElement('a');
   link.href = objectUrl;
   link.download = fileName;
+  document.body.append(link);
   link.click();
-  URL.revokeObjectURL(objectUrl);
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
 export default function DownloadButton({ documentId, fileName }) {

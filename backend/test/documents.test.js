@@ -75,6 +75,16 @@ test('POST /upload rejeita requisição sem o campo "file" com 400', async () =>
   assert.ok((await response.json()).error);
 });
 
+test('POST /upload rejeita campos multipart extras com 400', async () => {
+  const form = buildUploadForm('x', 'x.txt');
+  form.append('unexpected', 'value');
+
+  const response = await fetch(`${baseUrl}/upload`, { method: 'POST', body: form });
+
+  assert.strictEqual(response.status, 400);
+  assert.ok((await response.json()).error);
+});
+
 test('POST /upload rejeita arquivo maior que o limite com 413', async () => {
   const response = await uploadDocument('a'.repeat(200), 'grande.txt');
 
@@ -91,6 +101,24 @@ test('GET /documents lista os metadados enviados', async () => {
   const documents = await response.json();
   assert.ok(Array.isArray(documents));
   assert.ok(documents.some((doc) => doc.id === uploaded.id && doc.originalName === 'lista.txt'));
+});
+
+test('GET /documents aceita paginação opcional e informa o total', async () => {
+  const initialDocuments = await (await fetch(`${baseUrl}/documents`)).json();
+  await uploadDocument('primeiro', 'primeiro.txt');
+  await uploadDocument('segundo', 'segundo.txt');
+
+  const response = await fetch(`${baseUrl}/documents?limit=1&offset=1`);
+
+  assert.strictEqual(response.status, 200);
+  assert.strictEqual(response.headers.get('x-total-count'), String(initialDocuments.length + 2));
+  assert.strictEqual((await response.json()).length, 1);
+});
+
+test('GET /documents rejeita parâmetros de paginação inválidos', async () => {
+  const response = await fetch(`${baseUrl}/documents?limit=0`);
+
+  assert.strictEqual(response.status, 400);
 });
 
 test('GET /documents/:id/download devolve o conteúdo com o nome original', async () => {

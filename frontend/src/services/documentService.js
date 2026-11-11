@@ -28,9 +28,13 @@ export async function uploadDocument(file) {
   return response.json();
 }
 
-export async function listDocuments() {
-  const response = await request('/documents');
-  return response.json();
+export async function listDocuments({ limit = 25, offset = 0 } = {}) {
+  const query = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  const response = await request(`/documents?${query}`);
+  return {
+    documents: await response.json(),
+    total: Number(response.headers.get('X-Total-Count')),
+  };
 }
 
 export async function downloadDocument(documentId) {

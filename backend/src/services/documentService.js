@@ -4,6 +4,7 @@ const { randomUUID } = require('crypto');
 const config = require('../config');
 const documentRepository = require('../repositories/documentRepository');
 const { HttpError } = require('../errors/httpError');
+const STORED_FILE_NAME = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}(?:\.[a-z0-9]{1,10})?$/;
 
 // Metadados expostos pela API; o nome físico do arquivo é interno.
 function toPublicMetadata(record) {
@@ -28,8 +29,15 @@ function registerDocument({ storedFileName, originalName, size, owner }) {
   return toPublicMetadata(record);
 }
 
-function listDocuments() {
-  return documentRepository.findAll().map(toPublicMetadata);
+function listDocuments(pagination) {
+  const records = documentRepository.findAll();
+  const documents = pagination
+    ? records.slice(pagination.offset, pagination.offset + pagination.limit)
+    : records;
+  return {
+    documents: documents.map(toPublicMetadata),
+    total: records.length,
+  };
 }
 
 async function getDocumentFile(id) {
@@ -38,7 +46,15 @@ async function getDocumentFile(id) {
     throw new HttpError(404, 'Documento não encontrado.');
   }
 
-  const filePath = path.join(config.storageDir, record.storedFileName);
+  if (!STORED_FILE_NAME.test(record.storedFileName)) {
+    throw new HttpError(500, 'Registro de arquivo inválido.');
+  }
+
+  const storageDir = path.resolve(config.storageDir);
+  const filePath = path.resolve(storageDir, record.storedFileName);
+  if (!filePath.startsWith(`${storageDir}${path.sep}`)) {
+    throw new HttpError(500, 'Registro de arquivo inválido.');
+  }
   try {
     await fs.stat(filePath);
   } catch (err) {
