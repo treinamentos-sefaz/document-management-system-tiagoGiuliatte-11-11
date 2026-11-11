@@ -106,7 +106,7 @@ Os códigos HTTP e o formato comum das respostas de erro não estão definidos n
 
 - O backend implementa `GET /health`, `POST /upload`, `GET /documents` e `GET /documents/:id/download`, nas camadas `routes -> controllers -> services -> repositories`.
 - Decisões tomadas na implementação, pendentes de confirmação na especificação: campo multipart `file`; sucesso `201` no upload e `200` nas demais rotas; erros no formato `{ "error": "..." }`; limite de tamanho configurável por `MAX_UPLOAD_BYTES` (padrão 10 MB); diretório configurável por `STORAGE_DIR` (padrão `backend/storage`); `owner` lido do cabeçalho `X-Owner-Id` (padrão `anonymous`), sem autenticação nem filtro por proprietário.
-- A interface atual ainda não implementa os fluxos de envio, listagem ou download.
+- A interface implementa os fluxos de envio, listagem e download, com componentes `UploadComponent`, `DocumentList` e `DownloadButton` e o cliente HTTP em `frontend/src/services/documentService.js`, que usa o prefixo `/api`.
 
 ## 8. Plano de execução
 
